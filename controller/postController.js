@@ -1,8 +1,10 @@
 const { validationResult } = require("express-validator");
 const Post = require("../model/postModel");
 var createError = require("http-errors");
+const User = require("../model/userModel");
 
 exports.addPost = async (req, res, next) => {
+  console.log("req.file", req.file);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ message: errors.array()[0].msg });
@@ -16,16 +18,23 @@ exports.addPost = async (req, res, next) => {
       user: req.userId,
       imageURL: req?.file?.path || "",
     });
-    const result = await post.save(); // saving to mongoDB
-    if (result) {
+    const result = await post.save(); // Save post to MongoDB
+    const user = await User.findOne({ _id: req.userId }).lean(); // Find a single user document
+
+    if (result && user) {
+      const updatedResult = {
+        ...result.toObject(), // Convert Mongoose document to plain object
+        user: { name: user.name, email: user.email }, // Add user information
+      };
       return res.status(200).json({
         message: "Post added successfully",
-        post: result,
+        post: updatedResult, // Directly return the modified result
       });
     } else {
       return next(createError(500, "failed to create the task"));
     }
   } catch (error) {
+    console.log("error", error);
     return next(createError(500, error.message));
   }
 };

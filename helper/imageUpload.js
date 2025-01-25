@@ -14,8 +14,9 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "uploads", // Replace with the folder name in your Cloudinary account
-    allowed_formats: ["jpg","webp", "png", "jpeg"], // Specify allowed file formats
+    allowed_formats: ["jpg", "webp", "png", "jpeg"], // Specify allowed file formats
   },
 });
 const upload = multer({ storage });
+console.log("upload", upload);
 module.exports = { upload, cloudinary };

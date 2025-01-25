@@ -7,6 +7,7 @@ const { default: axios } = require("axios");
 const { default: mongoose, Types } = require("mongoose");
 const JWT_SECRET = process.env.TOKEN_KEY;
 
+// function to handle user registration
 exports.register = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -38,6 +39,8 @@ exports.register = async (req, res, next) => {
     return next(createError(500, error.message));
   }
 };
+
+// function to handle user login
 exports.login = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -50,20 +53,24 @@ exports.login = async (req, res, next) => {
     const email = req.body.email.toLowerCase();
     const password = req.body.password.toString();
 
-    const findUser = await User.findOne({ email: email });
-    if (findUser) {
-      const comparePassword = await findUser.isValidPassword(password); // user model method
+    const userData = await User.findOne({ email: email });
+    if (userData) {
+      const comparePassword = await userData.isValidPassword(password); // user model method
 
       //if(comparePassword id false means wrong password
-      if (!comparePassword) return next(createError.Unauthorized());
+      if (!comparePassword)
+        return next(createError.Unauthorized("Invalid email or password!"));
 
-      const accessToken = await generateToken(findUser._id);
+      const accessToken = await generateToken(userData._id);
 
       if (accessToken) {
         return res.status(200).json({
           message: "Sign in successfully",
-          id: findUser._id,
-          email: email,
+          user: {
+            id: userData._id,
+            email: email,
+            name: userData.name,
+          },
           token: accessToken,
         });
       }
@@ -72,6 +79,29 @@ exports.login = async (req, res, next) => {
       return next(createError.Unauthorized());
     }
   } catch (error) {
+    return next(createError.InternalServerError());
+  }
+};
+
+// function to check user authentication
+exports.checkAuth = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+
+    const userData = await User.findOne({ _id: userId });
+    if (userData) {
+      return res.status(200).json({
+        user: {
+          id: userData._id,
+          email: userData.email,
+          name: userData.name,
+        },
+      });
+    } else {
+      return next(createError.Unauthorized());
+    }
+  } catch (error) {
+    console.log("==========error", error);
     return next(createError.InternalServerError());
   }
 };
@@ -104,14 +134,12 @@ exports.forgotPassword = async (req, res, next) => {
         link: link,
       },
     };
-    console.log("data", data);
     const emailResponse = await axios({
       method: "POST",
       url: process.env.EMAILJS_SEND_API_URL,
       data: data,
       headers: { "Content-Type": "application/json" },
     });
-    console.log("emailResponse", emailResponse);
     return res
       .status(200)
       .json({ message: "Password reset email sent", status: true });

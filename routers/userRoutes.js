@@ -3,6 +3,9 @@ const body = require("express-validator").body;
 
 const router = express.Router();
 const userController = require("../controller/userController");
+const { verifyAccessToken } = require("../helper/jwtHelper");
+
+// API endpoint to create new user
 router.post(
   "/api/register",
   [
@@ -27,6 +30,8 @@ router.post(
   ],
   userController.register
 );
+
+// API endpoint to login
 router.post(
   "/api/login",
   [
@@ -46,6 +51,9 @@ router.post(
   ],
   userController.login
 );
+
+// API endpoint to check authentication
+router.get("/api/check-auth", verifyAccessToken, userController.checkAuth);
 
 // API endpoint for password reset requests
 router.post(
