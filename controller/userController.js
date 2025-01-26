@@ -173,7 +173,7 @@ exports.resetPassword = async (req, res, next) => {
     if (!user) {
       return next(createError.NotFound("User not found!"));
     }
-    console.log("user", user);
+    // console.log("user", user);
     user.password = newPassword;
 
     await user.save();

@@ -11,7 +11,11 @@ exports.createTask = async (req, res, next) => {
     const taskName = req.body.taskName.trim();
     const description = req.body.description.trim();
 
-    const task = new Task({ taskName: taskName, description: description });
+    const task = new Task({
+      taskName: taskName,
+      description: description,
+      user: req.userId,
+    });
     const result = await task.save(); // saving to mongoDB
     if (result) {
       return res.status(200).json({
@@ -27,7 +31,7 @@ exports.createTask = async (req, res, next) => {
 };
 exports.getTasks = async (req, res, next) => {
   try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
+    const tasks = await Task.find({ user: req.userId }).sort({ createdAt: -1 });
     return res.status(200).json({
       tasks: tasks,
     });
@@ -76,7 +80,7 @@ exports.updateTaskStatus = async (req, res, next) => {
       { $set: { status: status } },
       { new: true }
     );
-    console.log("updatedTask", updatedTask);
+    // console.log("updatedTask", updatedTask);
     return res.status(200).json({
       message: "task status updated successfully",
       task: updatedTask,

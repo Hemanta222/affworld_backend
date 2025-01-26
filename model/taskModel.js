@@ -5,6 +5,7 @@ const taskSchema = new Schema({
   taskName: { type: String, required: true },
   description: { type: String },
   status: { type: String, default: "Pending" },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
 });
 
 taskSchema.set("timestamps", true);
